@@ -106,6 +106,18 @@ public class UnitMovement : MonoBehaviour {
         }
     }
 
+    void FixedUpdate()
+    {
+        if(target != null)
+        {
+            RaycastHit hit;
+
+            if (Physics.Raycast(transform.position, Vector3.forward, out hit, 5.0f, LayerMask.NameToLayer("Attackable"), QueryTriggerInteraction.Ignore))
+                if (target != hit.collider.gameObject && hit.collider.CompareTag(enemyTag.ToString()))
+                    target = hit.collider.gameObject;
+        }
+    }
+
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag(enemyTag.ToString()) && !isPursuing)
@@ -113,6 +125,19 @@ public class UnitMovement : MonoBehaviour {
             target = other.gameObject;
             isPursuing = true;
             agent.destination = target.transform.position;
+        }
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if(target == null)
+        {
+            if(other.CompareTag(enemyTag.ToString()) && !isPursuing)
+            {
+                target = other.gameObject;
+                isPursuing = true;
+                agent.destination = target.transform.position;
+            }
         }
     }
 
