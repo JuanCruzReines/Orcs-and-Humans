@@ -8,6 +8,12 @@ public class UnitMovement : MonoBehaviour {
     public Transform[] points;
     private int destPoint = 0;
     private NavMeshAgent agent;
+    private Animator animController;
+
+    private GameObject target;
+    private bool isAttacking;
+    private bool isPursuing;
+    private bool isIdle;
 
 
     void Start()
@@ -18,6 +24,10 @@ public class UnitMovement : MonoBehaviour {
         // between points (ie, the agent doesn't slow down as it
         // approaches a destination point).
         agent.autoBraking = false;
+        animController = GetComponent<Animator>();
+
+        isPursuing = false;
+        isIdle = false;
 
         GotoNextPoint();
     }
@@ -45,25 +55,72 @@ public class UnitMovement : MonoBehaviour {
 
     void Update()
     {
-        // Choose the next destination point when the agent gets
-        // close to the current one.
-        if (agent.remainingDistance < 0.5f)
+
+        if (isPursuing)
         {
-            //If we are close to the last point
-            if (points.Length <= destPoint)
+            if (target != null)
             {
-                agent.Stop();
+                if (agent.remainingDistance < agent.stoppingDistance)
+                {
+                    agent.Stop();
+                    faceTarget();
+                }
             }
             else
             {
-                GotoNextPoint();
+                isPursuing = false;
+                agent.destination = points[destPoint].position;
+                animController.SetTrigger("run");
+                agent.Resume();
             }
         }
+        else
+        {
+            // Choose the next destination point when the agent gets
+            // close to the current one.
+            if (agent.remainingDistance < agent.stoppingDistance)
+            {
+                //If we are close to the last point
+                if (points.Length <= destPoint)
+                {
+                    agent.Stop();
+                    if (!isIdle)
+                    {
+                        animController.SetTrigger("idle");
+                        isIdle = true;
+                    }
+                }
+                else
+                {
+                    GotoNextPoint();
+                }
+            }
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Dummy") && !isPursuing)
+        {
+            target = other.gameObject;
+            isPursuing = true;
+            agent.destination = target.transform.position;
+        }
+    }
+
+    void faceTarget()
+    {
+        Vector3 point = target.transform.position;
+        point.y = 0;
+        gameObject.transform.LookAt(point);
+        
     }
 
     public void setWalkingPoints(Transform[] walkingPoints)
     {
         points = walkingPoints;
     }
+
+
 }
 
