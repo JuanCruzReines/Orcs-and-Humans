@@ -7,11 +7,15 @@ public class UnitMovement : MonoBehaviour {
 
     public Transform[] points;
     private int destPoint = 0;
+
+    public RacesEnum enemyTag;
+
     private NavMeshAgent agent;
     private Animator animController;
+    private UnitMeleeAttack _attack;
 
     private GameObject target;
-    private bool isAttacking;
+
     private bool isPursuing;
     private bool isIdle;
 
@@ -25,6 +29,7 @@ public class UnitMovement : MonoBehaviour {
         // approaches a destination point).
         agent.autoBraking = false;
         animController = GetComponent<Animator>();
+        _attack = GetComponent<UnitMeleeAttack>();
 
         isPursuing = false;
         isIdle = false;
@@ -60,10 +65,13 @@ public class UnitMovement : MonoBehaviour {
         {
             if (target != null)
             {
+                agent.destination = target.transform.position;
+                agent.Resume();
                 if (agent.remainingDistance < agent.stoppingDistance)
                 {
                     agent.Stop();
                     faceTarget();
+                    _attack.attack(target);
                 }
             }
             else
@@ -100,7 +108,7 @@ public class UnitMovement : MonoBehaviour {
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Dummy") && !isPursuing)
+        if (other.CompareTag(enemyTag.ToString()) && !isPursuing)
         {
             target = other.gameObject;
             isPursuing = true;
